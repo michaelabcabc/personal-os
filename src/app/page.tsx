@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useCallback, useEffect } from 'react'
 import { mutate } from 'swr'
 import { today } from '@/lib/utils'
