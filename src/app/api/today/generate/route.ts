@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { goals, actions, todayTasks } from '@/lib/db/schema'
 import { generateId, today } from '@/lib/utils'
 import { eq, and } from 'drizzle-orm'
-import { anthropic } from '@/lib/ai'
+import { openai, AI_MODEL } from '@/lib/ai'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST() {
@@ -32,13 +32,13 @@ ${activeActions.map(a => `- [${a.executionType}] ${a.title} (${a.frequency})`).j
 Return JSON array only:
 [{"title": "...", "description": "...", "executionType": "user|ai_assist|ai_exec"}]`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+  const response = await openai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   })
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  const text = response.choices[0]?.message?.content ?? ''
   const jsonMatch = text.match(/\[[\s\S]*\]/)
   if (!jsonMatch) return NextResponse.json({ error: 'AI returned invalid response' }, { status: 500 })
 

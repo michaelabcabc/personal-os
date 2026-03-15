@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['pg', 'pg-native'],
+  },
+}
 
 module.exports = nextConfig

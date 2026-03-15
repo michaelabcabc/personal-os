@@ -1,8 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+export const openai = new OpenAI({
+  apiKey: process.env.AI_API_KEY,
+  baseURL: process.env.AI_BASE_URL ?? 'https://aiapi.meccy.top/v1',
 })
+
+export const AI_MODEL = process.env.AI_MODEL ?? 'claude-sonnet-4-6'
 
 export type ChatContext = 'general' | 'goals' | 'actions' | 'ideas' | 'today'
 

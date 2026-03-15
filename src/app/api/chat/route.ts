@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { anthropic, getSystemPrompt, type ChatContext } from '@/lib/ai'
+import { openai, AI_MODEL, getSystemPrompt, type ChatContext } from '@/lib/ai'
 import { db } from '@/lib/db'
 import { messages, goals, actions, ideas, todayTasks, usageLogs } from '@/lib/db/schema'
 import { generateId, today } from '@/lib/utils'
@@ -73,23 +73,26 @@ export async function POST(req: NextRequest) {
   }
 
   const systemPrompt = getSystemPrompt(context) + (contextData ? `\n\nCurrent Data:${contextData}` : '')
+  const msgHistory = [...history.slice(-10), { role: 'user' as const, content: userMessage }]
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
       let fullText = ''
-      const msgHistory = [...history.slice(-10), { role: 'user' as const, content: userMessage }]
 
-      const aiStream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-6',
+      const aiStream = await openai.chat.completions.create({
+        model: AI_MODEL,
         max_tokens: 1024,
-        system: systemPrompt,
-        messages: msgHistory,
+        stream: true,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...msgHistory,
+        ],
       })
 
       for await (const chunk of aiStream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          const text = chunk.delta.text
+        const text = chunk.choices[0]?.delta?.content ?? ''
+        if (text) {
           fullText += text
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
         }
